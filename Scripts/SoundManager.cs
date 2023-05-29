@@ -1,43 +1,45 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 
 public enum AudioName
 {
     SoundTrack,
-    Rock_Slide,
-    Cat_Meow,
-    Eat_Cheese,
+    RockSlide,
+    CatMeow,
+    EatCheese,
     Failure,
     Victory
 }
 
 public sealed class SoundManager : MonoBehaviour
 {
-    public static SoundManager _instance;
-    [SerializeField] List<AudioSourceWithName> _audioSourceList;
+    public static SoundManager Instance;
+    
+    [SerializeField] List<AudioSourceWithName> audioSourceList;
 
     private void Awake()
     {
-        if (_instance != null)
+        if (Instance != null)
         {
             Debug.LogError("More than one SoundManager instance !");
             return;
         }
-        _instance = this;
+        Instance = this;
     }
 
-    public void PlayAudio(AudioName _name)
+    public void PlayAudio(AudioName name)
     {
-        int index = _audioSourceList.FindIndex(audio => audio._name == _name);
-        _audioSourceList[index]._audioSource.Play();
+        int index = audioSourceList.FindIndex(audio => audio.name == name);
+        audioSourceList[index].audioSource.Play();
     }
 
-    public void StopAudio(AudioName _name)
+    public void StopAudio(AudioName name)
     {
-        int index = _audioSourceList.FindIndex(audio => audio._name == _name);
-        _audioSourceList[index]._audioSource.Stop();
+        int index = audioSourceList.FindIndex(audio => audio.name == name);
+        audioSourceList[index].audioSource.Stop();
     }
 
 }
@@ -45,6 +47,6 @@ public sealed class SoundManager : MonoBehaviour
 [System.Serializable]
 public struct AudioSourceWithName
 {
-    public AudioSource _audioSource;
-    public AudioName _name;
+    public AudioSource audioSource;
+    public AudioName name;
 }

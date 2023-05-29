@@ -4,16 +4,17 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.Serialization;
 
 public sealed class GameManager : MonoBehaviour
 {
-    public static GameManager _instance;
-    [SerializeField] private int[] _numberEnemyToSpawn;
-    [SerializeField] private GameObject _player;
-    [SerializeField] private int _scoreIncrement = 100;
-    [SerializeField] private TextMeshProUGUI _scoreLabel;
-    [SerializeField] private GameObject _defeatScreen;
-    [SerializeField] private GameObject _victoryScreen;
+    public static GameManager Instance;
+    [SerializeField] private int[] numberEnemyToSpawn;
+    [SerializeField] private GameObject player;
+    [SerializeField] private int scoreIncrement = 100;
+    [SerializeField] private TextMeshProUGUI scoreLabel;
+    [SerializeField] private GameObject defeatScreen;
+    [SerializeField] private GameObject victoryScreen;
 
     private int _enemyToSpawnIndex;
     private int _enemyLocked;
@@ -21,25 +22,25 @@ public sealed class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (_instance != null)
+        if (Instance != null)
         {
             Debug.LogError("More than one GameManager instance !");
             return;
         }
-        _instance = this;
+        Instance = this;
     }
 
     public void IncrementScore()
     {
-        _score += _scoreIncrement;
-        _scoreLabel.text = "Score : "+_score.ToString();
+        _score += scoreIncrement;
+        scoreLabel.text = "Score : "+_score.ToString();
     }
 
     public void IncrementCatLocked()
     {
         _enemyLocked++;
 
-        if(_enemyLocked >= _numberEnemyToSpawn[_enemyToSpawnIndex]){
+        if(_enemyLocked >= numberEnemyToSpawn[_enemyToSpawnIndex]){
             NextPhase();
             _enemyLocked = 0;
         }
@@ -61,31 +62,29 @@ public sealed class GameManager : MonoBehaviour
 
         _enemyToSpawnIndex++;
 
-        if (_enemyToSpawnIndex >= _numberEnemyToSpawn.Length)
+        if (_enemyToSpawnIndex >= numberEnemyToSpawn.Length)
         {
             Victory();
             return;
         }
 
-        EnemySpawner._instance.SpawnEnemy(_numberEnemyToSpawn[_enemyToSpawnIndex]);
+        EnemySpawner.Instance.SpawnEnemy(numberEnemyToSpawn[_enemyToSpawnIndex]);
     }
 
     private void Victory()
     {
-        SoundManager._instance.StopAudio(AudioName.SoundTrack);
-        _victoryScreen.SetActive(true);
-        SoundManager._instance.PlayAudio(AudioName.Victory);
-        Debug.Log("Victory");
-        _player.SetActive(false);
+        SoundManager.Instance.StopAudio(AudioName.SoundTrack);
+        victoryScreen.SetActive(true);
+        SoundManager.Instance.PlayAudio(AudioName.Victory);
+        player.SetActive(false);
     }
 
     public void Defeat()
     {
-        SoundManager._instance.StopAudio(AudioName.SoundTrack);
-        _defeatScreen.SetActive(true);
-        SoundManager._instance.PlayAudio(AudioName.Failure);
-        Debug.Log("Defeat");
-        _player.SetActive(false);
+        SoundManager.Instance.StopAudio(AudioName.SoundTrack);
+        defeatScreen.SetActive(true);
+        SoundManager.Instance.PlayAudio(AudioName.Failure);
+        player.SetActive(false);
     }
 
     public void Restart()

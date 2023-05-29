@@ -2,30 +2,34 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Serialization;
 
 public class CubeMover : MonoBehaviour
 {
-    private List<Transform> _cubeList;
 
-    private Coroutine _moveCoroutine;
-    private Coroutine _checkNearestCube;
+    [SerializeField] private Transform cubeFolder;
+    [SerializeField] private Transform graphics;
+    [SerializeField] private Transform cube;
 
-    [SerializeField] private Transform _cubeFolder;
-    [SerializeField] private Transform _graphics;
+    [SerializeField] private float sphereRadius = 1f;
+    [SerializeField] private float distanceSphere = 1f;
 
-    [SerializeField] private float _sphereRadius = 1f;
-    [SerializeField] private float _distanceSphere = 1f;
+    [SerializeField] private Vector3 boxCastSize;
 
-    [SerializeField] private Vector3 _boxCastSize;
+    [SerializeField] private LayerMask cubeLayerMask;
 
-    [SerializeField] private LayerMask _cubeLayerMask;
-
-    [SerializeField] private Transform _cube;
+    private const string _cheeseTag = "Cheese";
+    private const string _cubeTag = "Cube";
 
     private BoxCollider _cubeCollider;
     private bool _sphereCastDisabled;
     private Vector3 _directionMove;
 
+    private List<Transform> _cubeList;
+
+    private Coroutine _moveCoroutine;
+    private Coroutine _checkNearestCube;
+    
     private void Awake()
     {
         _cubeList = new List<Transform>();
@@ -36,7 +40,7 @@ public class CubeMover : MonoBehaviour
         if (_sphereCastDisabled)
             return;
 
-        if (!Physics.SphereCast(_graphics.position, _sphereRadius, _graphics.forward, out RaycastHit hit, _distanceSphere, _cubeLayerMask))
+        if (!Physics.SphereCast(graphics.position, sphereRadius, graphics.forward, out RaycastHit hit, distanceSphere, cubeLayerMask))
             return;
 
         _sphereCastDisabled = true;
@@ -56,31 +60,33 @@ public class CubeMover : MonoBehaviour
                 _directionMove = new Vector3(0f, 0f, Mathf.Round(directionContact.z));
             }
         }
-        _cube = hit.transform;
+        cube = hit.transform;
         _cubeList.Add(hit.transform);
+
+        if (_checkNearestCube != null)
+        {
+            StopCoroutine(_checkNearestCube);
+        }
         _checkNearestCube = StartCoroutine(CheckNearestCube(hit.transform.position));
 
     }
 
     IEnumerator CheckNearestCube(Vector3 pos)
     {
-        /*
-        Physics.Raycast(pos, _directionMove, out RaycastHit hit, 1f, _cubeCheckLayerMask, QueryTriggerInteraction.Collide)
-        Debug.DrawRay(pos, _directionMove, Color.red, 1f);
-        */
-        if (Physics.BoxCast(pos, _boxCastSize / 2f, _directionMove, out RaycastHit hit, Quaternion.identity, 1f))
+        if (Physics.BoxCast(pos, boxCastSize / 2f, _directionMove, out RaycastHit hit, Quaternion.identity, 1f))
         {
-            if (hit.collider.CompareTag("Cheese"))
+            if (hit.collider.CompareTag(_cheeseTag))
             {
                 hit.collider.gameObject.SetActive(false);
                 StartCoroutine(CheckNearestCube(pos));
                 yield break;
             }
 
-            if (hit.collider.CompareTag("Cube"))
+            if (hit.collider.CompareTag(_cubeTag))
             {
-                _cube = hit.collider.transform;
-                _cubeList.Add(hit.collider.transform);
+                var collider_transform = hit.collider.transform;
+                cube = collider_transform;
+                _cubeList.Add(collider_transform);
                 StartCoroutine(CheckNearestCube(hit.collider.transform.position));
                 yield break;
             }
@@ -97,7 +103,7 @@ public class CubeMover : MonoBehaviour
                 _cubeList[i].transform.parent = _cubeList.First();
             }
         }
-        SoundManager._instance.PlayAudio(AudioName.Rock_Slide);
+        SoundManager.Instance.PlayAudio(AudioName.RockSlide);
         StartCoroutine(CubeMove(_cubeList.First(), _directionMove));
         yield return null;
     }
@@ -117,7 +123,7 @@ public class CubeMover : MonoBehaviour
         {
             for (int i = 1; i < _cubeList.Count; i++)
             {
-                _cubeList[i].transform.parent = _cubeFolder;
+                _cubeList[i].transform.parent = cubeFolder;
             }
         }
         _cubeList.Clear();
@@ -128,11 +134,9 @@ public class CubeMover : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position + transform.forward * _distanceSphere, _sphereRadius);
-
-
+        Gizmos.DrawWireSphere(transform.position + transform.forward * distanceSphere, sphereRadius);
+        
         Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(_cube.position + _directionMove, _boxCastSize);
-
+        Gizmos.DrawWireCube(cube.position + _directionMove, boxCastSize);
     }
 }

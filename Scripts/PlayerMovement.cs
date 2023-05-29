@@ -4,18 +4,16 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    //Visible Fields
     [SerializeField] private float _speed = 5f;
     [SerializeField] private Transform _graphics;
 
-    //Hidden Fields
     private Rigidbody _playerRb;
     private Vector3 _direction;
 
 
     private void Awake()
     {
-        _playerRb = this.GetComponent<Rigidbody>();
+        _playerRb = GetComponent<Rigidbody>();
     }
 
     void Update()
@@ -40,8 +38,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (other.CompareTag("Cheese"))
         {
-            SoundManager._instance.PlayAudio(AudioName.Eat_Cheese);
-            GameManager._instance.IncrementScore();
+            SoundManager.Instance.PlayAudio(AudioName.EatCheese);
+            GameManager.Instance.IncrementScore();
             other.gameObject.SetActive(false);
         }
     }

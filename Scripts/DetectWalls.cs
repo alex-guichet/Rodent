@@ -2,14 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Serialization;
 
 public class DetectWalls : MonoBehaviour
 {
-    [SerializeField] private LayerMask _layerDetection;
-    [SerializeField] private float _sphereRadius = 1f;
-    [SerializeField] private float _distanceSphere = 1f;
-    [SerializeField] private List<SideCheck> _sideCheckList;
-    [SerializeField] private int _timerStuck = 3;
+    [SerializeField] private LayerMask layerDetection;
+    [SerializeField] private float sphereRadius = 1f;
+    [SerializeField] private float distanceSphere = 1f;
+    [SerializeField] private List<SideCheck> sideCheckList;
+    [SerializeField] private int timerStuck = 3;
 
     private EnemyMovement _enemyMovement;
     private int _sideCollided;
@@ -21,31 +22,37 @@ public class DetectWalls : MonoBehaviour
     {
         _sideCollided = 0;
         _enemyMovement = this.GetComponent<EnemyMovement>();
-        _sideCheckList = new List<SideCheck>();
+        sideCheckList = new List<SideCheck>();
     }
 
     private void FixedUpdate()
     {
-        CheckSide(transform.forward, "Forward");
-        CheckSide(-transform.forward, "Backward");
-        CheckSide(transform.right, "Right");
-        CheckSide(-transform.right, "Left");
+        var forward = transform.forward;
+        CheckSide(forward, "Forward");
+        CheckSide(-forward, "Backward");
+        
+        var right = transform.right;
+        CheckSide(right, "Right");
+        CheckSide(-right, "Left");
+        
         CheckDetectors();
     }
 
     private void CheckSide(Vector3 direction, string sideName)
     {
-        if (Physics.SphereCast(transform.position, _sphereRadius, direction, out RaycastHit hit, _distanceSphere, _layerDetection, QueryTriggerInteraction.Collide))
+        if (Physics.SphereCast(transform.position, sphereRadius, direction, out RaycastHit hit, distanceSphere, layerDetection, QueryTriggerInteraction.Collide))
         {
-            if (!_sideCheckList.Exists(SideCheck => SideCheck._sideName == sideName))
+            if (!sideCheckList.Exists(sideCheck => sideCheck.sideName == sideName))
             {
-                _sideCheckList.Add(new SideCheck(sideName, true));
+                sideCheckList.Add(new SideCheck(sideName, true));
                 _sideCollided++;
                 return;
             }
 
-            int index = _sideCheckList.FindIndex(SideCheck => SideCheck._sideName == sideName);
-            if (_sideCheckList[index]._isTouching == true)
+            bool Match(SideCheck sideCheck) => sideCheck.sideName == sideName;
+
+            int index = sideCheckList.FindIndex(check => Match(check));
+            if (sideCheckList[index].isTouching == true)
                 return;
             
             Updatelist(index, true);
@@ -53,11 +60,13 @@ public class DetectWalls : MonoBehaviour
         }
         else
         {
-            if (!_sideCheckList.Exists(SideCheck => SideCheck._sideName == sideName))
+            if (!sideCheckList.Exists(sideCheck => sideCheck.sideName == sideName))
                 return;
 
-            int index = _sideCheckList.FindIndex(SideCheck => SideCheck._sideName == sideName);
-            if (_sideCheckList[index]._isTouching == false)
+            bool Match(SideCheck sideCheck) => sideCheck.sideName == sideName;
+
+            int index = sideCheckList.FindIndex(check => Match(check));
+            if (sideCheckList[index].isTouching == false)
                 return;
 
             Updatelist(index, false);
@@ -67,9 +76,9 @@ public class DetectWalls : MonoBehaviour
 
     private void Updatelist(int index, bool value)
     {
-        SideCheck sideCheck = _sideCheckList[index];
-        sideCheck._isTouching = value;
-        _sideCheckList[index] = sideCheck;
+        SideCheck sideCheck = sideCheckList[index];
+        sideCheck.isTouching = value;
+        sideCheckList[index] = sideCheck;
     }
 
     private void CheckDetectors()
@@ -99,7 +108,7 @@ public class DetectWalls : MonoBehaviour
     IEnumerator StartTimer()
     {
         int timer = 0;
-        while (timer < _timerStuck)
+        while (timer < timerStuck)
         {
             timer++;
             yield return new WaitForSeconds(1f);
@@ -112,25 +121,25 @@ public class DetectWalls : MonoBehaviour
     [System.Serializable]
     public struct SideCheck
     {
-        public string _sideName;
-        public bool _isTouching;
+        public string sideName;
+        public bool isTouching;
 
         public SideCheck(string sideName, bool isTouching)
         {
-            _sideName = sideName;
-            _isTouching = isTouching;
+            this.sideName = sideName;
+            this.isTouching = isTouching;
         }
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position + transform.forward * _distanceSphere, _sphereRadius);
+        Gizmos.DrawWireSphere(transform.position + transform.forward * distanceSphere, sphereRadius);
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position + -transform.forward * _distanceSphere, _sphereRadius);
+        Gizmos.DrawWireSphere(transform.position + -transform.forward * distanceSphere, sphereRadius);
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position + transform.right * _distanceSphere, _sphereRadius);
+        Gizmos.DrawWireSphere(transform.position + transform.right * distanceSphere, sphereRadius);
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position + -transform.right * _distanceSphere, _sphereRadius);
+        Gizmos.DrawWireSphere(transform.position + -transform.right * distanceSphere, sphereRadius);
     }
 }

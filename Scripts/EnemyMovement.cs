@@ -3,33 +3,33 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 
 public class EnemyMovement : MonoBehaviour
 {
-    //Hidden Fields
-    private static Transform _playerTransform;
+    [SerializeField] private LayerMask cubeLayerMask;
+    [SerializeField] private Rigidbody catRb;
+    [SerializeField] private float rotationSpeed = 5f;
+    [SerializeField] private GameObject cheesePrefab;
+    [SerializeField] private Animator catAnimator;
+    
     private NavMeshAgent _agent;
+    
     private Vector3 _lastPositionPlayer;
     private Vector3 _currentPositionPlayer;
+    private Vector3 _directionMove;
+    
     private Coroutine _walkBackAndForth;
-    private bool _walk;
-    public bool _remainingDistance;
-    public Vector3 _directionMove;
-    private Transform _nearestTransformPlayer;
-    private bool _isStopped;
-    public Vector3 _destination;
-    private DetectWalls _detectWalls;
     private Coroutine _meow;
-
-    //Visible Fields
-    [SerializeField] private LayerMask _cubeLayerMask;
-    [SerializeField] private Rigidbody _catRb;
-    [SerializeField] private float _rotationSpeed = 5f;
-    [SerializeField] private GameObject _cheesePrefab;
-    [SerializeField] private Animator _catAnimator;
-
-    public float remainingDistance;
-
+    
+    private bool _walk;
+    private bool _isStopped;
+    
+    private Transform _nearestTransformPlayer;
+    private static Transform _playerTransform;
+    
+    private DetectWalls _detectWalls;
+    
     private void Awake()
     {
         _detectWalls = GetComponent<DetectWalls>();
@@ -60,7 +60,7 @@ public class EnemyMovement : MonoBehaviour
         if (_agent.velocity.normalized != Vector3.zero)
         {
             Quaternion LookRotation = Quaternion.LookRotation(_agent.velocity.normalized);
-            _catRb.rotation = Quaternion.RotateTowards(_catRb.rotation, LookRotation, _rotationSpeed);
+            catRb.rotation = Quaternion.RotateTowards(catRb.rotation, LookRotation, rotationSpeed);
         }
 
         MoveTowardsPlayer();
@@ -119,9 +119,6 @@ public class EnemyMovement : MonoBehaviour
             _agent.SetDestination(_directionMove);
             _walkBackAndForth = StartCoroutine(WalkBackAndForth());
         }
-
-        remainingDistance = _agent.remainingDistance;
-        _destination = _agent.destination;
     }
 
     public void Stop()
@@ -129,20 +126,20 @@ public class EnemyMovement : MonoBehaviour
         StopCoroutine(_meow);
         _agent.isStopped = true;
         _isStopped = true;
-        _catAnimator.SetBool("IsSitting", true);
+        catAnimator.SetBool("IsSitting", true);
     }
     public void Blocked()
     {
         Stop();
-        GameManager._instance.IncrementCatLocked();
+        GameManager.Instance.IncrementCatLocked();
     }
 
     public void Restart()
     {
         _agent.isStopped = false;
         _isStopped = false;
-        GameManager._instance.DecrementCatLocked();
-        _catAnimator.SetBool("IsSitting", false);
+        GameManager.Instance.DecrementCatLocked();
+        catAnimator.SetBool("IsSitting", false);
         _meow = StartCoroutine(Meow(Random.Range(5, 10)));
     }
 
@@ -152,7 +149,7 @@ public class EnemyMovement : MonoBehaviour
     }
     public void TurnIntoCheese()
     {
-        Instantiate(_cheesePrefab, transform.position, _cheesePrefab.transform.rotation);
+        Instantiate(cheesePrefab, transform.position, cheesePrefab.transform.rotation);
         gameObject.SetActive(false);
     }
 
@@ -162,14 +159,14 @@ public class EnemyMovement : MonoBehaviour
         {
             _detectWalls.enabled = false;
             Stop();
-            GameManager._instance.Defeat();
+            GameManager.Instance.Defeat();
         }
     }
 
     IEnumerator Meow(int seconds)
     {
         yield return new WaitForSeconds(seconds);
-        SoundManager._instance.PlayAudio(AudioName.Cat_Meow);
+        SoundManager.Instance.PlayAudio(AudioName.CatMeow);
         _meow = StartCoroutine(Meow(Random.Range(5, 10)));
     }
 }

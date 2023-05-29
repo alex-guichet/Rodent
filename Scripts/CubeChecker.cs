@@ -4,29 +4,18 @@ using UnityEngine;
 
 public class CubeChecker : MonoBehaviour
 {
-    public List<Collider> _checkedGameObjectList;
+    public List<Collider> CheckedGameObjectList { get; private set; }
 
     private void Awake()
     {
-        _checkedGameObjectList = new List<Collider>();
+        CheckedGameObjectList = new List<Collider>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!_checkedGameObjectList.Contains(other))
+        if (!CheckedGameObjectList.Contains(other))
         {
-            _checkedGameObjectList.Add(other);
+            CheckedGameObjectList.Add(other);
         }
     }
-
-    /*
-    private void OnTriggerExit(Collider other)
-    {
-        if (_checkedGameObjectList.Contains(other))
-        {
-            _checkedGameObjectList.Remove(other);
-        }
-    }
-    */
-
 }

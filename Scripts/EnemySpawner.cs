@@ -2,32 +2,34 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public sealed class EnemySpawner : MonoBehaviour
 {
-    [SerializeField] private Vector3 _cubeCheckerSize;
-    [SerializeField] private Vector3 _cubeEraserSize;
-    [SerializeField] private SpawnPoints[] _enemySpawnPoints;
-    [SerializeField] private LayerMask _checkerLayerMask;
-    [SerializeField] private LayerMask _eraserLayerMask;
-    [SerializeField] private GameObject _cat;
+    [SerializeField] private Vector3 cubeCheckerSize;
+    [SerializeField] private Vector3 cubeEraserSize;
+    [SerializeField] private SpawnPoints[] enemySpawnPoints;
+    [SerializeField] private LayerMask checkerLayerMask;
+    [SerializeField] private LayerMask eraserLayerMask;
+    [SerializeField] private GameObject cat;
 
-    public static EnemySpawner _instance;
+    public static EnemySpawner Instance;
+    
     private int _lastSpawnPointIndex = 0;
 
     private void Awake()
     {
-        if(_instance != null)
+        if(Instance != null)
         {
             Debug.LogError("More than one EnemySpawner instance !");
             return;
         }
-        _instance = this;
+        Instance = this;
     }
 
     private bool CubeChecker()
     {
-        Collider[] colliders = Physics.OverlapBox(transform.position, _cubeCheckerSize / 2, transform.rotation, _checkerLayerMask);
+        Collider[] colliders = Physics.OverlapBox(transform.position, cubeCheckerSize / 2, transform.rotation, checkerLayerMask);
 
         if (colliders.Length > 0)
         {
@@ -40,7 +42,7 @@ public sealed class EnemySpawner : MonoBehaviour
 
     private void CubeEraser()
     {
-        Collider[] colliders = Physics.OverlapBox(transform.position, _cubeEraserSize / 2, transform.rotation, _eraserLayerMask);
+        Collider[] colliders = Physics.OverlapBox(transform.position, cubeEraserSize / 2, transform.rotation, eraserLayerMask);
 
         if (colliders.Length > 0)
         {
@@ -50,7 +52,7 @@ public sealed class EnemySpawner : MonoBehaviour
             }
         }
 
-        Instantiate(_cat, transform.position, _cat.transform.rotation);
+        Instantiate(cat, transform.position, cat.transform.rotation);
     }
 
     public void SpawnEnemy(int number)
@@ -60,16 +62,16 @@ public sealed class EnemySpawner : MonoBehaviour
 
     IEnumerator MoveSpawner()
     {
-        int randomIndex = Random.Range(0, _enemySpawnPoints.Length);
+        int randomIndex = Random.Range(0, enemySpawnPoints.Length);
 
         while(randomIndex == _lastSpawnPointIndex)
         {
-            randomIndex = Random.Range(0, _enemySpawnPoints.Length);
+            randomIndex = Random.Range(0, enemySpawnPoints.Length);
         }
 
         _lastSpawnPointIndex = randomIndex;
-        Vector3 EndPos = _enemySpawnPoints[randomIndex]._endPoint;
-        transform.position = _enemySpawnPoints[randomIndex]._startPoint;
+        Vector3 EndPos = enemySpawnPoints[randomIndex]._endPoint;
+        transform.position = enemySpawnPoints[randomIndex]._startPoint;
 
         float distance = Vector3.Distance(transform.position, EndPos);
 
@@ -100,10 +102,11 @@ public sealed class EnemySpawner : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(transform.position, _cubeCheckerSize);
+        var position = transform.position;
+        Gizmos.DrawWireCube(position, cubeCheckerSize);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(transform.position, _cubeEraserSize);
+        Gizmos.DrawWireCube(position, cubeEraserSize);
     }
     [System.Serializable]
     public struct SpawnPoints
